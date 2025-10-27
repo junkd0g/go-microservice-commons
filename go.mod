@@ -3,6 +3,7 @@ module github.com/junkd0g/go-microservice-commons
 go 1.21
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
 )
