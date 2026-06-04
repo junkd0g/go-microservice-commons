@@ -78,17 +78,23 @@ func GetLoggerFromContext(ctx context.Context) (Logger, error) {
 	return logger, nil
 }
 
-// AddFieldsToContext associates an array of fields with a context.
+// AddFieldsToContext wraps the given fields in a MutableFields and stores it
+// in the context under ContextKeyLoggerFields, making the fields available to
+// the logger's automatic extraction.
 func AddFieldsToContext(ctx context.Context, fields []map[string]interface{}) context.Context {
-	return context.WithValue(ctx, ContextKeyLoggerFields, fields)
+	mf := NewMutableFields()
+	for _, f := range fields {
+		mf.AddField(f)
+	}
+	return context.WithValue(ctx, ContextKeyLoggerFields, mf)
 }
 
-// GetFieldsFromContext retrieves the array of fields associated with a context.
+// GetFieldsFromContext retrieves the fields associated with a context.
 // If the fields do not exist, it returns an empty slice.
 func GetFieldsFromContext(ctx context.Context) []map[string]interface{} {
-	fields, ok := ctx.Value(ContextKeyLoggerFields).([]map[string]interface{})
+	mf, ok := ctx.Value(ContextKeyLoggerFields).(*MutableFields)
 	if !ok {
 		return []map[string]interface{}{}
 	}
-	return fields
+	return mf.GetFields()
 }

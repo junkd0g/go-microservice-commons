@@ -61,17 +61,14 @@ func main() {
 }
 ```
 
-### Context with Mutable Fields
+### Context with Fields
 
 ```go
-// Create mutable fields
-mutableFields := goctx.NewMutableFields()
-mutableFields.AddField(map[string]interface{}{"request_id": "abc-123"})
+// Add fields to context — the logger picks them up automatically
+ctx = goctx.AddFieldsToContext(ctx, []map[string]interface{}{
+    {"request_id": "abc-123"},
+})
 
-// Add to context
-ctx = context.WithValue(ctx, goctx.ContextKeyLoggerFields, mutableFields)
-
-// Logger will automatically include these fields
 log.Info(ctx, "Processing request")
 // Output: {"level":"info","msg":"Processing request","request_id":"abc-123"}
 ```
@@ -85,12 +82,12 @@ func LoggerMiddleware(next http.Handler) http.Handler {
         ctx := goctx.AddLoggerToContext(r.Context(), log)
 
         // Add request metadata
-        mutableFields := goctx.NewMutableFields()
-        mutableFields.AddField(map[string]interface{}{
-            "path": r.URL.Path,
-            "method": r.Method,
+        ctx = goctx.AddFieldsToContext(ctx, []map[string]interface{}{
+            {
+                "path":   r.URL.Path,
+                "method": r.Method,
+            },
         })
-        ctx = context.WithValue(ctx, goctx.ContextKeyLoggerFields, mutableFields)
 
         next.ServeHTTP(w, r.WithContext(ctx))
     })

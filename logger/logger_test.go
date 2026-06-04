@@ -103,6 +103,50 @@ func TestInfoLog_WithVariousFieldTypes(t *testing.T) {
 	}
 }
 
+func TestInfoLog_WithAddFieldsToContext(t *testing.T) {
+	log, err := logger.NewLogger()
+	if err != nil {
+		t.Fatalf("Error creating logger: %v", err)
+	}
+
+	core, recorded := observer.New(zapcore.InfoLevel)
+	log.SetCore(core)
+
+	// Use AddFieldsToContext (the public helper) and verify the logger picks
+	// the fields up. Before the bug fix, this path silently dropped all fields
+	// because AddFieldsToContext stored a []map while the logger expected *MutableFields.
+	ctx := goctx.AddFieldsToContext(context.Background(), []map[string]interface{}{
+		{"request_id": "req-001"},
+		{"service": "test-svc"},
+	})
+
+	log.Info(ctx, "end-to-end", map[string]interface{}{"inline": "yes"})
+
+	entries := recorded.All()
+	if len(entries) != 1 {
+		t.Fatalf("Expected 1 log entry, got %d", len(entries))
+	}
+
+	// 2 from context + 1 inline = 3
+	if len(entries[0].Context) != 3 {
+		t.Fatalf("Expected 3 fields, got %d", len(entries[0].Context))
+	}
+
+	fieldMap := make(map[string]string)
+	for _, f := range entries[0].Context {
+		fieldMap[f.Key] = f.String
+	}
+	if fieldMap["request_id"] != "req-001" {
+		t.Errorf("Expected request_id=req-001, got %s", fieldMap["request_id"])
+	}
+	if fieldMap["service"] != "test-svc" {
+		t.Errorf("Expected service=test-svc, got %s", fieldMap["service"])
+	}
+	if fieldMap["inline"] != "yes" {
+		t.Errorf("Expected inline=yes, got %s", fieldMap["inline"])
+	}
+}
+
 func TestInfoLog_WithMutableFieldsFromContext(t *testing.T) {
 	log, err := logger.NewLogger()
 	if err != nil {
