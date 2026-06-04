@@ -67,6 +67,42 @@ func TestErrorLog(t *testing.T) {
 	}
 }
 
+func TestInfoLog_WithVariousFieldTypes(t *testing.T) {
+	log, err := logger.NewLogger()
+	if err != nil {
+		t.Fatalf("Error creating logger: %v", err)
+	}
+
+	core, recorded := observer.New(zapcore.InfoLevel)
+	log.SetCore(core)
+
+	log.Info(context.Background(), "mixed types", map[string]interface{}{
+		"str":   "hello",
+		"num":   42,
+		"flag":  true,
+		"ratio": 3.14,
+	})
+
+	entries := recorded.All()
+	if len(entries) != 1 {
+		t.Fatalf("Expected 1 log entry, got %d", len(entries))
+	}
+
+	if len(entries[0].Context) != 4 {
+		t.Fatalf("Expected 4 fields, got %d", len(entries[0].Context))
+	}
+
+	fieldKeys := make(map[string]bool)
+	for _, f := range entries[0].Context {
+		fieldKeys[f.Key] = true
+	}
+	for _, key := range []string{"str", "num", "flag", "ratio"} {
+		if !fieldKeys[key] {
+			t.Errorf("Expected field %q to be present", key)
+		}
+	}
+}
+
 func TestInfoLog_WithMutableFieldsFromContext(t *testing.T) {
 	log, err := logger.NewLogger()
 	if err != nil {

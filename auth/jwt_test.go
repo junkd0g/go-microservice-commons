@@ -171,15 +171,12 @@ func Test_ValidateToken(t *testing.T) {
 		// Note: The exact error might vary, but it should be related to parsing or signature validation
 	})
 
-	t.Run("should validate token with uppercase field names", func(t *testing.T) {
+	t.Run("should validate token with custom claim fields", func(t *testing.T) {
 		ctx := context.Background()
 
-		// This tests that tokens with uppercase field names (ID, Email) work correctly
-		// which is important for backward compatibility
 		jwtWrapper, err := auth.NewJwtWrapper("test-secret-key", "AuthService", 720)
 		assert.NoError(t, err)
 
-		// Generate a token to ensure our struct tags work both ways
 		token, err := jwtWrapper.GenerateToken(ctx, "65ff15f55c04488f1005008d", "test@example.com")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)

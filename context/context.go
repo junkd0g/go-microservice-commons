@@ -37,11 +37,13 @@ func (mf *MutableFields) AddField(field map[string]interface{}) {
 	mf.fields = append(mf.fields, field)
 }
 
-// GetFields safely retrieves all fields from the MutableFields.
+// GetFields safely retrieves a copy of all fields from the MutableFields.
 func (mf *MutableFields) GetFields() []map[string]interface{} {
 	mf.RLock()
 	defer mf.RUnlock()
-	return mf.fields
+	cp := make([]map[string]interface{}, len(mf.fields))
+	copy(cp, mf.fields)
+	return cp
 }
 
 // Logger provides an interface for logging functionalities.
@@ -56,9 +58,14 @@ var (
 	ContextKeyLoggerFields = contextKey("loggerFields")
 )
 
-// AddLoggerToContex associates a logger with a context.
-func AddLoggerToContex(ctx context.Context, logger Logger) context.Context {
+// AddLoggerToContext associates a logger with a context.
+func AddLoggerToContext(ctx context.Context, logger Logger) context.Context {
 	return context.WithValue(ctx, contextKeyLogger, logger)
+}
+
+// Deprecated: Use AddLoggerToContext instead.
+func AddLoggerToContex(ctx context.Context, logger Logger) context.Context {
+	return AddLoggerToContext(ctx, logger)
 }
 
 // GetLoggerFromContext retrieves the logger associated with a context.

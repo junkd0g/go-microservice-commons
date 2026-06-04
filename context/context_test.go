@@ -15,7 +15,7 @@ func Test_Logger(t *testing.T) {
 	t.Run("Add successfully a logger and retrieve it", func(t *testing.T) {
 		ctx := context.Background()
 		log, _ := logger.NewLogger()
-		ctx = goctx.AddLoggerToContex(ctx, log)
+		ctx = goctx.AddLoggerToContext(ctx, log)
 		assert.NotNil(t, ctx)
 		loggerToTest, err := goctx.GetLoggerFromContext(ctx)
 

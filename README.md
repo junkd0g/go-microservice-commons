@@ -51,7 +51,7 @@ func main() {
 
     // Add logger to context
     ctx := context.Background()
-    ctx = goctx.AddLoggerToContex(ctx, log)
+    ctx = goctx.AddLoggerToContext(ctx, log)
 
     // Use the logger
     log.Info(ctx, "Application started", map[string]interface{}{
@@ -82,7 +82,7 @@ log.Info(ctx, "Processing request")
 func LoggerMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         log, _ := logger.NewLogger()
-        ctx := goctx.AddLoggerToContex(r.Context(), log)
+        ctx := goctx.AddLoggerToContext(r.Context(), log)
 
         // Add request metadata
         mutableFields := goctx.NewMutableFields()

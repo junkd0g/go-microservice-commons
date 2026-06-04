@@ -21,8 +21,8 @@ type JwtWrapper struct {
 
 // JwtClaim adds email as a claim to the token.
 type JwtClaim struct {
-	ID    string `json:"ID"`
-	Email string `json:"Email"`
+	ID    string `json:"id"`
+	Email string `json:"email"`
 	jwt.RegisteredClaims
 }
 
