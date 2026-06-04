@@ -1,6 +1,6 @@
 # Go Microservice Commons
 
-A reusable Go library providing common microservice infrastructure components including context management and structured logging.
+A reusable Go library providing common microservice infrastructure components including context management, structured logging, and JWT authentication.
 
 ## Features
 
@@ -15,6 +15,12 @@ A reusable Go library providing common microservice infrastructure components in
 - Automatic field extraction from context
 - Support for custom log fields
 - Context-aware logging with Info and Error levels
+
+### Auth Package
+- JWT token generation and validation using HMAC-SHA256
+- Configurable expiration, issuer, and secret key
+- Algorithm-confusion attack prevention
+- Custom claims with user ID and email
 
 ## Installation
 
@@ -88,6 +94,43 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 
         next.ServeHTTP(w, r.WithContext(ctx))
     })
+}
+```
+
+### JWT Authentication
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+
+    "github.com/junkd0g/go-microservice-commons/auth"
+)
+
+func main() {
+    // Create a JWT wrapper
+    jwtWrapper, err := auth.NewJwtWrapper("my-secret-key", "my-service", 24)
+    if err != nil {
+        panic(err)
+    }
+
+    // Generate a token
+    ctx := context.Background()
+    token, err := jwtWrapper.GenerateToken(ctx, "user-uuid", "user@example.com")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println("Token:", token)
+
+    // Validate the token
+    claims, err := jwtWrapper.ValidateToken(ctx, token)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println("User ID:", claims.ID)
+    fmt.Println("Email:", claims.Email)
 }
 ```
 
