@@ -72,7 +72,6 @@ func (l *Logger) Error(ctx context.Context, msg string, fields ...map[string]int
 }
 
 // convertToZapFields transforms custom log fields into zap-compatible fields.
-// It currently supports fields of type string and int.
 func convertToZapFields(fields ...map[string]interface{}) []zap.Field {
 	var zapFields []zap.Field
 
@@ -83,6 +82,8 @@ func convertToZapFields(fields ...map[string]interface{}) []zap.Field {
 				zapFields = append(zapFields, zap.String(k, value))
 			case int:
 				zapFields = append(zapFields, zap.Int(k, value))
+			default:
+				zapFields = append(zapFields, zap.Any(k, value))
 			}
 		}
 	}

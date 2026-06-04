@@ -37,11 +37,13 @@ func (mf *MutableFields) AddField(field map[string]interface{}) {
 	mf.fields = append(mf.fields, field)
 }
 
-// GetFields safely retrieves all fields from the MutableFields.
+// GetFields safely retrieves a copy of all fields from the MutableFields.
 func (mf *MutableFields) GetFields() []map[string]interface{} {
 	mf.RLock()
 	defer mf.RUnlock()
-	return mf.fields
+	cp := make([]map[string]interface{}, len(mf.fields))
+	copy(cp, mf.fields)
+	return cp
 }
 
 // Logger provides an interface for logging functionalities.
@@ -56,9 +58,14 @@ var (
 	ContextKeyLoggerFields = contextKey("loggerFields")
 )
 
-// AddLoggerToContex associates a logger with a context.
-func AddLoggerToContex(ctx context.Context, logger Logger) context.Context {
+// AddLoggerToContext associates a logger with a context.
+func AddLoggerToContext(ctx context.Context, logger Logger) context.Context {
 	return context.WithValue(ctx, contextKeyLogger, logger)
+}
+
+// Deprecated: Use AddLoggerToContext instead.
+func AddLoggerToContex(ctx context.Context, logger Logger) context.Context {
+	return AddLoggerToContext(ctx, logger)
 }
 
 // GetLoggerFromContext retrieves the logger associated with a context.
@@ -71,17 +78,23 @@ func GetLoggerFromContext(ctx context.Context) (Logger, error) {
 	return logger, nil
 }
 
-// AddFieldsToContext associates an array of fields with a context.
+// AddFieldsToContext wraps the given fields in a MutableFields and stores it
+// in the context under ContextKeyLoggerFields, making the fields available to
+// the logger's automatic extraction.
 func AddFieldsToContext(ctx context.Context, fields []map[string]interface{}) context.Context {
-	return context.WithValue(ctx, ContextKeyLoggerFields, fields)
+	mf := NewMutableFields()
+	for _, f := range fields {
+		mf.AddField(f)
+	}
+	return context.WithValue(ctx, ContextKeyLoggerFields, mf)
 }
 
-// GetFieldsFromContext retrieves the array of fields associated with a context.
+// GetFieldsFromContext retrieves the fields associated with a context.
 // If the fields do not exist, it returns an empty slice.
 func GetFieldsFromContext(ctx context.Context) []map[string]interface{} {
-	fields, ok := ctx.Value(ContextKeyLoggerFields).([]map[string]interface{})
+	mf, ok := ctx.Value(ContextKeyLoggerFields).(*MutableFields)
 	if !ok {
 		return []map[string]interface{}{}
 	}
-	return fields
+	return mf.GetFields()
 }

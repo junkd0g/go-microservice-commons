@@ -1,6 +1,6 @@
 # Go Microservice Commons
 
-A reusable Go library providing common microservice infrastructure components including context management and structured logging.
+A reusable Go library providing common microservice infrastructure components including context management, structured logging, and JWT authentication.
 
 ## Features
 
@@ -15,6 +15,12 @@ A reusable Go library providing common microservice infrastructure components in
 - Automatic field extraction from context
 - Support for custom log fields
 - Context-aware logging with Info and Error levels
+
+### Auth Package
+- JWT token generation and validation using HMAC-SHA256
+- Configurable expiration, issuer, and secret key
+- Algorithm-confusion attack prevention
+- Custom claims with user ID and email
 
 ## Installation
 
@@ -45,7 +51,7 @@ func main() {
 
     // Add logger to context
     ctx := context.Background()
-    ctx = goctx.AddLoggerToContex(ctx, log)
+    ctx = goctx.AddLoggerToContext(ctx, log)
 
     // Use the logger
     log.Info(ctx, "Application started", map[string]interface{}{
@@ -55,17 +61,14 @@ func main() {
 }
 ```
 
-### Context with Mutable Fields
+### Context with Fields
 
 ```go
-// Create mutable fields
-mutableFields := goctx.NewMutableFields()
-mutableFields.AddField(map[string]interface{}{"request_id": "abc-123"})
+// Add fields to context — the logger picks them up automatically
+ctx = goctx.AddFieldsToContext(ctx, []map[string]interface{}{
+    {"request_id": "abc-123"},
+})
 
-// Add to context
-ctx = context.WithValue(ctx, goctx.ContextKeyLoggerFields, mutableFields)
-
-// Logger will automatically include these fields
 log.Info(ctx, "Processing request")
 // Output: {"level":"info","msg":"Processing request","request_id":"abc-123"}
 ```
@@ -76,18 +79,55 @@ log.Info(ctx, "Processing request")
 func LoggerMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         log, _ := logger.NewLogger()
-        ctx := goctx.AddLoggerToContex(r.Context(), log)
+        ctx := goctx.AddLoggerToContext(r.Context(), log)
 
         // Add request metadata
-        mutableFields := goctx.NewMutableFields()
-        mutableFields.AddField(map[string]interface{}{
-            "path": r.URL.Path,
-            "method": r.Method,
+        ctx = goctx.AddFieldsToContext(ctx, []map[string]interface{}{
+            {
+                "path":   r.URL.Path,
+                "method": r.Method,
+            },
         })
-        ctx = context.WithValue(ctx, goctx.ContextKeyLoggerFields, mutableFields)
 
         next.ServeHTTP(w, r.WithContext(ctx))
     })
+}
+```
+
+### JWT Authentication
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+
+    "github.com/junkd0g/go-microservice-commons/auth"
+)
+
+func main() {
+    // Create a JWT wrapper
+    jwtWrapper, err := auth.NewJwtWrapper("my-secret-key", "my-service", 24)
+    if err != nil {
+        panic(err)
+    }
+
+    // Generate a token
+    ctx := context.Background()
+    token, err := jwtWrapper.GenerateToken(ctx, "user-uuid", "user@example.com")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println("Token:", token)
+
+    // Validate the token
+    claims, err := jwtWrapper.ValidateToken(ctx, token)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println("User ID:", claims.ID)
+    fmt.Println("Email:", claims.Email)
 }
 ```
 

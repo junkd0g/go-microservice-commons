@@ -21,8 +21,8 @@ type JwtWrapper struct {
 
 // JwtClaim adds email as a claim to the token.
 type JwtClaim struct {
-	ID    string `json:"ID"`
-	Email string `json:"Email"`
+	ID    string `json:"id"`
+	Email string `json:"email"`
 	jwt.RegisteredClaims
 }
 
@@ -52,7 +52,7 @@ func (j *JwtWrapper) GenerateToken(ctx context.Context, uuid, email string) (str
 		ID:    uuid,
 		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(j.ExpirationHours))),
 			Issuer:    j.Issuer,
 		},
 	}
