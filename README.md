@@ -1,5 +1,9 @@
 # Go Microservice Commons
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/junkd0g/go-microservice-commons)](https://goreportcard.com/report/github.com/junkd0g/go-microservice-commons)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![GoDoc](https://pkg.go.dev/badge/github.com/junkd0g/go-microservice-commons.svg)](https://pkg.go.dev/github.com/junkd0g/go-microservice-commons)
+
 A reusable Go library providing common microservice infrastructure components including context management, structured logging, and JWT authentication.
 
 ## Features
