@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v1.3.0] - 2026-11-08
+
+### Added
+
+- Shared request identity, HTTP instrumentation and pooled GET retry transport.
+- Configurable service JSON logging with unique fields and application policy hooks.
+- Database-independent finite jobrunner and a separate Mongo store implementation.
+- Redacted Mongo command monitoring with caller-owned failure filtering.
+
+Existing context, logger and JWT APIs remain compatible. Go 1.21 remains the
+minimum version; service-specific routes, scheduling and provider protocols
+are not embedded in this library.
+
 ## [v1.1.0] - 2026-06-04
 
 ### Breaking Changes

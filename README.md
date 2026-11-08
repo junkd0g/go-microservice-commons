@@ -152,3 +152,32 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Author
 
 Iordanis Paschalidis ([@junkd0g](https://github.com/junkd0g))
+
+## Service infrastructure
+
+The context and logger APIs remain compatible with existing callers. Additional
+packages provide reusable infrastructure without application-specific policy:
+
+- `context.WithRequestID` / `RequestID` carry one request identity across layers.
+- `logger.NewServiceLogger(logger.Options{Service: "my-service"})` writes JSON
+  to stdout with stable timestamps and deduplicated fields. `QuietInfo` and
+  `Transform` hooks configure application-specific filtering and classification.
+- `httpx.Middleware(httpx.ServerOptions{...})` propagates IDs and trace context,
+  records bounded request completion data, and delegates route naming, custom
+  fields and response classification to caller-supplied functions.
+- `httpx.Transport` instruments outbound HTTP calls without changing response
+  semantics by default. Optional hooks add headers, classify responses or map
+  protocol-specific errors. Nested wrappers do not double-log requests.
+- `httpx.NewClient(timeout)` reuses connections and retries GET requests at most
+  twice on transport errors or gateway failures. Retry-After responses and
+  canceled contexts stop retries. Other methods are never automatically retried.
+- `mongox.Monitor` records slow/failed Mongo commands without document contents,
+  connection strings or server error text. Optional filtering belongs to the caller.
+- `jobrunner.RunEnv` runs a named finite job against a supplied store; the core
+  package has no database dependency. `jobrunner/mongo.New` supplies the Mongo
+  implementation. Job work must honor cancellation and be idempotent because a
+  crash after a side effect and before completion recording can repeat that work.
+
+Middleware options and hooks are configured before serving and must be safe for
+concurrent requests. The library supplies no football names, route sets,
+provider refresh conventions, schedules or service credentials.
