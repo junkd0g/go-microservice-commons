@@ -69,3 +69,24 @@ jobs:
         with:
           go-version-input: stable
           go-package: ./...
+
+  mongo:
+    name: Optional Mongo integration
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mongo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: mongo/go.sum
+      - name: Use commons from this revision
+        run: go mod edit -replace=github.com/junkd0g/go-microservice-commons=..
+      - name: Test
+        run: go test -race ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Security
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...

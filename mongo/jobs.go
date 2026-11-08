@@ -1,4 +1,4 @@
-// Package mongo implements a persistent jobrunner.Store using MongoDB.
+// Package mongo supplies optional MongoDB integrations for commons.
 package mongo
 
 import (
@@ -21,10 +21,10 @@ const (
 // Mongo stores job leases and run records in MongoDB.
 type Mongo struct{ leases, runs *mongodriver.Collection }
 
-// New selects the lease and run collections.
+// NewJobStore selects the lease and run collections.
 var _ jobrunner.Store = (*Mongo)(nil)
 
-func New(db *mongodriver.Database) *Mongo {
+func NewJobStore(db *mongodriver.Database) *Mongo {
 	return &Mongo{db.Collection("scheduled_job_leases"), db.Collection("scheduled_job_runs")}
 }
 

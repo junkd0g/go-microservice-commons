@@ -171,10 +171,10 @@ packages provide reusable infrastructure without application-specific policy:
 - `httpx.NewClient(timeout)` reuses connections and retries GET requests at most
   twice on transport errors or gateway failures. Retry-After responses and
   canceled contexts stop retries. Other methods are never automatically retried.
-- `mongox.Monitor` records slow/failed Mongo commands without document contents,
+- `mongo.Monitor` records slow/failed Mongo commands without document contents,
   connection strings or server error text. Optional filtering belongs to the caller.
 - `jobrunner.RunEnv` runs a named finite job against a supplied store; the core
-  package has no database dependency. `jobrunner/mongo.New` supplies the Mongo
+  package has no database dependency. `mongo.NewJobStore` supplies the Mongo
   implementation. Job work must honor cancellation and be idempotent because a
   crash after a side effect and before completion recording can repeat that work.
 
