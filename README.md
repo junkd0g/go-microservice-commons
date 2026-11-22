@@ -181,3 +181,15 @@ packages provide reusable infrastructure without application-specific policy:
 Middleware options and hooks are configured before serving and must be safe for
 concurrent requests. The library supplies no football names, route sets,
 provider refresh conventions, schedules or service credentials.
+
+## Shared caches
+
+`cache` owns read-through freshness, stale fallback and cancellation. `rediscache`
+implements Redis/Valkey storage with expiring owner-checked leases, renewable
+fills and bounded entry sets. Construct one store per process, ping it at startup,
+and inject it into service caches with a distinct namespace. Cache records must
+be JSON serializable; private DTO fields require explicit storage codecs.
+An omitted store disables caching; production services should require a store.
+The fill owner follows its request context; followers poll completed values
+before contending for a lease. Cleanup alone uses a bounded background context.
+This revision requires Go 1.26.11.

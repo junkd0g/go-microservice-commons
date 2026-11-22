@@ -30,6 +30,7 @@ type ServerOptions struct {
 	Fields                func(*http.Request) map[string]interface{}
 	QuietRoute            func(string) bool
 	ClassifyResponse      func(int, http.Header) (string, bool)
+	ResponseFields        func(int, http.Header) map[string]interface{}
 	LegacyRequestIDHeader string
 }
 
@@ -86,6 +87,11 @@ func Middleware(options ServerOptions) func(http.Handler) http.Handler {
 					return
 				}
 				fields := map[string]interface{}{"method": r.Method, "route": route, "status_code": recorder.status, "duration_ms": int(time.Since(start).Milliseconds()), "response_bytes": recorder.bytes}
+				if options.ResponseFields != nil {
+					for k, v := range options.ResponseFields(recorder.status, recorder.Header()) {
+						fields[k] = v
+					}
+				}
 				if !completed {
 					fields["error_type"] = "panic"
 					if !recorder.wrote {
@@ -148,4 +154,22 @@ func (w *responseWriter) Flush() {
 
 func validTraceParent(parent string) bool {
 	return validParent.MatchString(parent) && !strings.HasPrefix(parent[3:], strings.Repeat("0", 32)) && parent[36:52] != strings.Repeat("0", 16)
+}
+
+// TraceParent returns the validated trace context attached by HTTP middleware.
+func TraceParent(ctx context.Context) string {
+	parent, _ := ctx.Value(parentKey{}).(string)
+	if !validTraceParent(parent) {
+		return ""
+	}
+	return parent
+}
+
+// WithTraceParent restores validated trace context for durable background work.
+func WithTraceParent(ctx context.Context, parent string) context.Context {
+	if !validTraceParent(parent) {
+		return ctx
+	}
+	ctx = context.WithValue(ctx, parentKey{}, parent)
+	return goctx.AddFieldsToContext(ctx, append(goctx.GetFieldsFromContext(ctx), map[string]interface{}{"trace_id": parent[3:35]}))
 }
