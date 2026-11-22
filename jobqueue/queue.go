@@ -10,6 +10,9 @@ import (
 
 var ErrBusy = errors.New("job already in progress")
 
+// ErrRetry retains a command for another attempt after its current lease expires.
+var ErrRetry = errors.New("retry job after lease")
+
 type Job interface{ JobKind() string }
 type Store[T Job] interface {
 	Enqueue(context.Context, T) (bool, error)
@@ -93,7 +96,7 @@ func (q *Queue[T]) execute(parent context.Context, owner string, job T) {
 		err = errors.Join(err, e)
 	}
 	// Cancellation on shutdown leaves the durable job available for another worker.
-	if parent.Err() != nil {
+	if parent.Err() != nil || errors.Is(err, ErrRetry) {
 		return
 	}
 	message := ""
