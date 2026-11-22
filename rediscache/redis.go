@@ -77,3 +77,30 @@ func (s *Store) Publish(ctx context.Context, ns, key, owner string, value []byte
 	n, e := publish.Run(ctx, s.client, []string{k, l, z}, owner, value, keep.Milliseconds(), max).Int()
 	return n == 1, e
 }
+
+// Generation returns the shared invalidation generation for a namespace.
+func (s *Store) Generation(ctx context.Context, ns string) (int64, error) {
+	k, _, _ := s.keys("generation", ns)
+	n, e := s.client.Get(ctx, k).Int64()
+	if errors.Is(e, redis.Nil) {
+		return 0, nil
+	}
+	return n, e
+}
+
+// Invalidate changes the namespace generation; in-flight writes remain isolated
+// under their original generation and cannot repopulate the active cache.
+func (s *Store) Invalidate(ctx context.Context, ns string) error {
+	k, _, _ := s.keys("generation", ns)
+	return s.client.Incr(ctx, k).Err()
+}
+
+// Write stores a service-owned opaque record with a caller-selected retention.
+func (s *Store) Write(ctx context.Context, ns, key string, value []byte, ttl time.Duration) error {
+	k, _, _ := s.keys(ns, key)
+	return s.client.Set(ctx, k, value, ttl).Err()
+}
+func (s *Store) Delete(ctx context.Context, ns, key string) error {
+	k, _, _ := s.keys(ns, key)
+	return s.client.Del(ctx, k).Err()
+}
