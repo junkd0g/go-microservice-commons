@@ -90,7 +90,7 @@ func (q *Queue[T]) execute(parent context.Context, owner string, job T) {
 			}
 		}
 	}()
-	err := q.Run(ctx, job)
+	err := q.run(ctx, job)
 	close(done)
 	for e := range renewed {
 		err = errors.Join(err, e)
@@ -109,4 +109,13 @@ func (q *Queue[T]) execute(parent context.Context, owner string, job T) {
 	if e := q.Store.Complete(finish, job.JobKind(), owner, message); e != nil {
 		q.Log.Error(parent, "background job completion failed", map[string]interface{}{"job": job.JobKind(), "error": e.Error()})
 	}
+}
+
+func (q *Queue[T]) run(ctx context.Context, job T) (err error) {
+	defer func() {
+		if recover() != nil {
+			err = errors.New("background job panicked")
+		}
+	}()
+	return q.Run(ctx, job)
 }
