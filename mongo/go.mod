@@ -1,9 +1,9 @@
 module github.com/junkd0g/go-microservice-commons/mongo
 
-go 1.25.0
+go 1.26.11
 
 require (
-	github.com/junkd0g/go-microservice-commons v1.3.0
+	github.com/junkd0g/go-microservice-commons v1.3.1-0.20261122195439-83b96ca30a5d
 	go.mongodb.org/mongo-driver v1.17.7
 )
 
@@ -15,7 +15,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/crypto v0.58.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 )
