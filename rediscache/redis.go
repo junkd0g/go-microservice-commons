@@ -56,6 +56,7 @@ if redis.call('GET',KEYS[2]) ~= ARGV[1] then return 0 end
 if tonumber(ARGV[3])>0 then redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]) else redis.call('SET',KEYS[1],ARGV[2]) end
 local t=redis.call('TIME');local now=t[1]*1000+math.floor(t[2]/1000)
 redis.call('ZADD',KEYS[3],now,KEYS[1])
+if tonumber(ARGV[3])>0 and redis.call('PTTL',KEYS[3])<tonumber(ARGV[3]) then redis.call('PEXPIRE',KEYS[3],ARGV[3]) end
 local over=redis.call('ZCARD',KEYS[3])-tonumber(ARGV[4])
 if tonumber(ARGV[4])>0 and over>0 then
  local keys=redis.call('ZRANGE',KEYS[3],0,math.min(over,100)-1)
