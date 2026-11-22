@@ -18,7 +18,7 @@ type Store[T jobqueue.Job] struct {
 func New[T jobqueue.Job](url, namespace string) (*Store[T], error) {
 	o, e := redis.ParseURL(url)
 	if e != nil {
-		return nil, errors.New("invalid generation Redis URL")
+		return nil, errors.New("invalid job queue Redis URL")
 	}
 	o.ContextTimeoutEnabled = true
 	o.DialTimeout = 3 * time.Second

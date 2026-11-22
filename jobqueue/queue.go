@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var ErrBusy = errors.New("generation already in progress")
+var ErrBusy = errors.New("job already in progress")
 
 type Job interface{ JobKind() string }
 type Store[T Job] interface {
@@ -52,7 +52,7 @@ func (q *Queue[T]) Serve(ctx context.Context) {
 		owner := uuid.NewString()
 		job, ok, e := q.Store.Take(ctx, owner, time.Minute)
 		if e != nil {
-			q.Log.Error(ctx, "generation claim failed", map[string]interface{}{"error": e.Error()})
+			q.Log.Error(ctx, "background job claim failed", map[string]interface{}{"error": e.Error()})
 		} else if ok {
 			q.execute(ctx, owner, job)
 		}
@@ -99,11 +99,11 @@ func (q *Queue[T]) execute(parent context.Context, owner string, job T) {
 	message := ""
 	if err != nil {
 		message = err.Error()
-		q.Log.Error(ctx, "generation failed", map[string]interface{}{"job": job.JobKind(), "error": message})
+		q.Log.Error(ctx, "background job failed", map[string]interface{}{"job": job.JobKind(), "error": message})
 	}
 	finish, stop := context.WithTimeout(parent, 5*time.Second)
 	defer stop()
 	if e := q.Store.Complete(finish, job.JobKind(), owner, message); e != nil {
-		q.Log.Error(parent, "generation completion failed", map[string]interface{}{"job": job.JobKind(), "error": e.Error()})
+		q.Log.Error(parent, "background job completion failed", map[string]interface{}{"job": job.JobKind(), "error": e.Error()})
 	}
 }
