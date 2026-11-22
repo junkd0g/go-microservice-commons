@@ -30,6 +30,7 @@ type ServerOptions struct {
 	Fields                func(*http.Request) map[string]interface{}
 	QuietRoute            func(string) bool
 	ClassifyResponse      func(int, http.Header) (string, bool)
+	ResponseFields        func(int, http.Header) map[string]interface{}
 	LegacyRequestIDHeader string
 }
 
@@ -86,6 +87,11 @@ func Middleware(options ServerOptions) func(http.Handler) http.Handler {
 					return
 				}
 				fields := map[string]interface{}{"method": r.Method, "route": route, "status_code": recorder.status, "duration_ms": int(time.Since(start).Milliseconds()), "response_bytes": recorder.bytes}
+				if options.ResponseFields != nil {
+					for k, v := range options.ResponseFields(recorder.status, recorder.Header()) {
+						fields[k] = v
+					}
+				}
 				if !completed {
 					fields["error_type"] = "panic"
 					if !recorder.wrote {
